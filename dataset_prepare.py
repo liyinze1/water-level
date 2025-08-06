@@ -84,6 +84,20 @@ for file in tqdm(all_files):
         labels.append(file)
     elif 'JPEGImages' in file:
         images.append(file)
+       
+labelled_images = []
+labelled_labels = []
+for image in images:
+    corresponding_label = image.replace('JPEGImages', 'Annotations')[:-3] + 'txt'
+    if corresponding_label in labels:
+        labelled_images.append(image)
+        labelled_labels.append(corresponding_label)
+
+images = labelled_images
+labels = labelled_labels
+
+print(f"Total images: {len(images)}")
+print(f"Total labels: {len(labels)}")
         
 data_dir = 'data'
 if not os.path.exists(data_dir):
