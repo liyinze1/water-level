@@ -64,10 +64,13 @@ if not os.path.exists(data_dir):
 
 data = []
 print("Copying images to data directory...")
-for image in tqdm(images):
-    output_path = os.path.join(data_dir, 'images', image[2:].replace('JPEGImages', '-').replace('/', '_'))
-    shutil.copy(image, output_path)
-    data.append(output_path)
+if len(os.listdir(os.path.join(data_dir, 'images'))) == len(images):
+    print("Images already copied, skipping...")
+else:
+    for image in tqdm(images):
+        output_path = os.path.join(data_dir, 'images', image[2:].replace('JPEGImages', '-').replace('/', '_'))
+        shutil.copy(image, output_path)
+        data.append(output_path)
     
 print("Converting segment masks to YOLO format...")
 for label in tqdm(labels):
