@@ -5,3 +5,6 @@
 .DS_Store
 *.yaml
 *.json
+runs/
+wandb/
+__pycache__/
