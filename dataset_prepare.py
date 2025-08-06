@@ -90,24 +90,16 @@ if not os.path.exists(data_dir):
     os.makedirs(data_dir)
     os.makedirs(os.path.join(data_dir, 'images'))
     os.makedirs(os.path.join(data_dir, 'labels'))
-
-data = []
-print("Copying images to data directory...")
-if len(os.listdir(os.path.join(data_dir, 'images'))) == len(images):
-    print("Images already copied, skipping...")
-else:
-    for image in tqdm(images):
-        output_path = os.path.join(data_dir, 'images', image[2:].replace('JPEGImages', '-').replace('/', '_'))
-        shutil.copy(image, output_path)
-        data.append(output_path)
     
 print("Converting segment masks to YOLO format...")
 for label in tqdm(labels):
     output_path = os.path.join(data_dir, 'labels', label[2:].replace('Annotations', '-').replace('/', '_')[:-3] + 'txt')  # Create output path
     seg_to_yolo(label, output_path)
-    
-                
+
 f = open('data.txt', 'w')
-for file in data:
-    f.write(file + '\n')
+print("Copying images to data directory...")
+for image in tqdm(images):
+    output_path = os.path.join(data_dir, 'images', image[2:].replace('JPEGImages', '-').replace('/', '_'))
+    shutil.copy(image, output_path)
+    f.write(output_path + '\n')
 f.close()
