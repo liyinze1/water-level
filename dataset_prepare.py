@@ -43,7 +43,36 @@ def seg_to_yolo(mask_path, output_path):
         for item in yolo_format_data:
             line = " ".join(map(str, item))
             file.write(line + "\n")
+    
 
+def seg_to_yolo_fast(mask_path, output_path):
+    mask = cv2.imread(str(mask_path), cv2.IMREAD_GRAYSCALE)
+    img_height, img_width = mask.shape
+
+    # Preallocate list
+    yolo_lines = []
+
+    # Get contours in one pass for all non-zero values
+    non_zero_mask = (mask > 0).astype(np.uint8)
+    contours, _ = cv2.findContours(non_zero_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    for contour in contours:
+        if len(contour) >= 3:
+            contour = contour.squeeze()
+            if contour.ndim != 2:
+                continue  # filter out bad contours
+            # Normalize with vectorized NumPy (faster)
+            norm = contour.astype(np.float32)
+            norm[:, 0] /= img_width
+            norm[:, 1] /= img_height
+            # Flatten and format
+            norm_flat = norm.flatten()
+            line = '0 ' + ' '.join(f'{v:.6f}' for v in norm_flat)
+            yolo_lines.append(line)
+
+    # Write all at once
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(yolo_lines) + '\n')
 
 print("Getting all the files...")
 all_files = get_files('.')
@@ -75,8 +104,8 @@ else:
 print("Converting segment masks to YOLO format...")
 for label in tqdm(labels):
     output_path = os.path.join(data_dir, 'labels', label[2:].replace('Annotations', '-').replace('/', '_')[:-3] + 'txt')  # Create output path
-    seg_to_yolo(file, output_path)
-                
+    seg_to_yolo(label, output_path)
+    
                 
 f = open('data.txt', 'w')
 for file in data:
