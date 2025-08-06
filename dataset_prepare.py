@@ -88,7 +88,7 @@ for file in tqdm(all_files):
 labelled_images = []
 labelled_labels = []
 for image in images:
-    corresponding_label = image.replace('JPEGImages', 'Annotations')[:-3] + 'txt'
+    corresponding_label = image.replace('JPEGImages', 'Annotations')[:-3] + 'png'
     if corresponding_label in labels:
         labelled_images.append(image)
         labelled_labels.append(corresponding_label)
