@@ -2,3 +2,4 @@
 *.png
 *.jpg
 .vscode/
+.DS_Store
