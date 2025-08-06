@@ -3,3 +3,5 @@
 *.jpg
 .vscode/
 .DS_Store
+*.yaml
+*.json
