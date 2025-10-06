@@ -8,3 +8,4 @@
 runs/
 wandb/
 __pycache__/
+*.cache
