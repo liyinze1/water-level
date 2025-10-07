@@ -13,6 +13,7 @@ mv water_v1/water_v1/* water_v1
 
 ```bash
 pip install ultralytics
+pip install wandb
 ```
 https://github.com/ultralytics/ultralytics
 
