@@ -81,6 +81,8 @@ quantize_static(
     model_output=onnx_model_quant_static,
     calibration_data_reader=datareader,
     quant_format=QuantFormat.QDQ,
+    weight_type=QuantType.QInt8,
+    activation_type=QuantType.QInt8,
 )
 print(f"Saved quantized model to {onnx_model_quant_static}")
 
