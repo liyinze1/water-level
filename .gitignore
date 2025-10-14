@@ -1,3 +1,6 @@
+*.pt
+*.zip
+runs/
 *.txt
 *.png
 *.jpg
