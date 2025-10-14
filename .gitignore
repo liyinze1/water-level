@@ -11,4 +11,5 @@ runs/
 runs/
 wandb/
 __pycache__/
+.ipynb_checkpoints/
 *.cache
