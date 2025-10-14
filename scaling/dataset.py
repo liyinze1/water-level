@@ -7,9 +7,10 @@ import torch
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from torchvision.transforms import v2
-from torchvision.tv_tensors import Image as TVImage
+from torchvision.tv_tensors import Image as TVImage, KeyPoints
 
 from onnxruntime.quantization import CalibrationDataReader
+
 
 class WaterLevelDataset(Dataset):
     """ This class definition is for a Dataset class to provide a dataset for water level segmentation tasks and to train the quantization process.
@@ -100,13 +101,12 @@ class WaterLevelDataset(Dataset):
             class_ids = []
             for class_id, polygon in labels:
                 abs_poly = [(x * orig_w, y * orig_h) for x, y in polygon]
-                polygons.append(abs_poly)
+                polygons.append(KeyPoints(abs_poly, canvas_size=[orig_h, orig_w]))
                 class_ids.append(class_id)
-
             sample = {
                 "image": image,
                 "annotations": {
-                    "polygons": polygons,
+                    "polygons": polygons,  # BUG: transform is not altering polygons
                     "labels": torch.tensor(class_ids, dtype=torch.int64)
                 }
             }
