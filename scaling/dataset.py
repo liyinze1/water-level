@@ -12,8 +12,18 @@ from torchvision.tv_tensors import Image as TVImage
 from onnxruntime.quantization import CalibrationDataReader
 
 class WaterLevelDataset(Dataset):
+    """ This class definition is for a Dataset class to provide a dataset for water level segmentation tasks and to train the quantization process.
+    """
 
     def __init__(self, config_path, transform=None):
+        """
+        Initialize a WaterLevelDataset object.
+
+        Args:
+            config_path (str): Path to the YAML configuration file.
+            transform (callable, optional): A function/transform that takes in a sample and returns a transformed version. Defaults to None.
+                                            Must be from torchvision.transforms.v2
+        """
         self.transform = transform
         # Load YAML config
         with open(config_path, 'r') as f:
@@ -26,14 +36,28 @@ class WaterLevelDataset(Dataset):
             self.samples = [line.strip() for line in f if line.strip()]
 
     def __len__(self):
+        """
+        Returns the number of samples in the dataset.
+
+        Returns:
+            int: Number of samples in the dataset.
+        """
         return len(self.samples)
 
     def read_yolo_segmentation_labels(self, label_path):
         """
         Reads a YOLO segmentation label file and returns a list of objects.
         Each object is a tuple: (class_id, polygon), where polygon is a list of (x, y) points.
+        Args:
+            label_path (str): Path to the YOLO segmentation label file.
+        
+        Returns:
+            list: A list of objects, where each object is a tuple: (class_id, polygon).
         """
         objects = []
+        # TXT file with YOLO entries
+        # each line contains:
+        # <class_id> <x1> <y1> <x2> <y2> ... <xn> <yn>
         with open(label_path, 'r') as f:
             for line in f:
                 parts = line.strip().split()
@@ -46,6 +70,17 @@ class WaterLevelDataset(Dataset):
         return objects
 
     def __getitem__(self, idx):
+        """
+        Returns a sample from the dataset.
+
+        Args:
+            idx (int): Index of the sample to retrieve.
+
+        Returns:
+            tuple: A tuple containing the image and its corresponding labels.
+            The image is a torch tensor of shape (C, H, W) and the labels are a list of tuples.
+            Each tuple contains the class id and the polygon coordinates.
+        """
         sample_path = self.samples[idx]
 
         # RGB image
@@ -53,9 +88,6 @@ class WaterLevelDataset(Dataset):
         image = Image.open(img_path)
         image = np.array(image)
 
-        # TXT file with YOLO entries
-        # each line contains:
-        # <class_id> <x1> <y1> <x2> <y2> ... <xn> <yn>
         label_path = img_path.replace("data/images", "data/labels")[:-4] + ".txt"
         labels = self.read_yolo_segmentation_labels(label_path)
 
@@ -93,6 +125,14 @@ class WaterLevelDataset(Dataset):
 # Define a calibration reader
 class DataReader(CalibrationDataReader):
     def __init__(self, dataloader, input_name, limit=None):
+        """
+        Initializes a DataReader object.
+
+        Args:
+            dataloader (DataLoader): The dataloader to read samples from.
+            input_name (str): The name of the input to the model.
+            limit (int, optional): The maximum number of samples to read. Defaults to None.
+        """
         self.dataloader = dataloader
         self.iterator = iter(self.dataloader)
         self.limit = limit
@@ -100,17 +140,32 @@ class DataReader(CalibrationDataReader):
         self.input_name = input_name
     
     def __len__(self):
+        """
+        Returns the number of samples in the calibration data reader.
+
+        If a limit is set, the number of samples will be limited to that number.
+        Otherwise, the number of samples will be the length of the underlying dataloader.
+        """
         if self.limit is not None:
             return min(len(self.dataloader), self.limit)
         else:
             return len(self.dataloader)
 
     def get_next(self):
+        """
+        Returns the next sample from the calibration data reader.
+
+        If a limit is set, the data reader will stop returning samples after reaching that limit.
+        Otherwise, it will return samples until the end of the underlying dataloader.
+
+        Returns:
+            dict or None: A dictionary containing the input data, or None if the end of the data is reached.
+        """
         image, label = next(self.iterator)
         self.returned += 1
         if self.limit is not None and self.returned >= self.limit:
             return None  # end of data
-        return {self.input_name: image.numpy()}
+        return {self.input_name: image.numpy()}  # image must be a numpy array. don't need labels
 
 
 def collate_fn(batch):
@@ -128,13 +183,25 @@ def collate_fn(batch):
 
 
 def get_datareader(config_file, imgsz, input_name, limit=10):
+    """
+    Returns a DataReader object which can be used to provide data to an ONNXRuntime session.
+
+    Args:
+        config_file (str): Path to the configuration file (yaml format).
+        imgsz (int): Image size.
+        input_name (str): Name of the input node in the model.
+        limit (int, optional): Maximum number of samples to return. Defaults to 10.
+
+    Returns:
+        DataReader: A DataReader object which can be used to provide data to an ONNXRuntime session.
+    """
     transform = v2.Compose([
         v2.Resize([imgsz, imgsz]),
         v2.ToTensor()
     ])
 
     dataset = WaterLevelDataset(config_path=config_file, transform=transform)
-    loader = DataLoader(dataset, batch_size=1, shuffle=True, collate_fn=collate_fn)
+    loader = DataLoader(dataset, batch_size=1, shuffle=True, collate_fn=collate_fn)  # Note that batch size is 1
 
     datareader = DataReader(loader, limit=limit, input_name=input_name)
     return datareader
