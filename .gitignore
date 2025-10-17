@@ -9,3 +9,7 @@ runs/
 wandb/
 __pycache__/
 *.cache
+*.pt
+
+.ipynb_checkpoints/
+
