@@ -1,9 +1,0 @@
-{
-    "recommendations": [
-        "ms-python.python",
-        "codeium.codeium",
-        "ms-python.debugpy",
-        "esbenp.prettier-vscode",
-        "ms-toolsai.jupyter"
-    ]
-}
