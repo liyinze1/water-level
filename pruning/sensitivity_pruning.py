@@ -23,6 +23,7 @@ from pruning_l1_unstructured import count_trainable_parameters, count_active_par
 def collect_channel_sensitivity(model, data_loader, num_batches=5):
     """
     Collects the sensitivity of each channel in each Conv2d layer in a model.
+    The sensitivity is given by the absolute mean per channel.
 
     Args:
         model (nn.Module): The model to collect sensitivities from.
@@ -37,7 +38,7 @@ def collect_channel_sensitivity(model, data_loader, num_batches=5):
 
     def hook_fn(module, input, output):
         if isinstance(module, torch.nn.Conv2d):
-            act = output.detach().abs().mean(dim=(0, 2, 3))  # Mean per channel
+            act = output.detach().abs().mean(dim=(0, 2, 3))  # Absolute Mean per channel
             if module not in sensitivity:
                 sensitivity[module] = act
             else:
