@@ -201,6 +201,7 @@ def get_datareader(config_file, imgsz, input_name, limit=10):
     ])
 
     dataset = WaterLevelDataset(config_path=config_file, transform=transform)
+    # print("Number of images", len(dataset))
     loader = DataLoader(dataset, batch_size=1, shuffle=True, collate_fn=collate_fn)  # Note that batch size is 1
 
     datareader = DataReader(loader, limit=limit, input_name=input_name)
