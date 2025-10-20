@@ -1,36 +1,27 @@
 import random
 import os
 
-f = open('data.txt', 'r')
+# training set
+
+f = open('water_train.txt', 'r')
 files = f.readlines()
 f.close()
 
-rate = 0.2
-
-rivers = []
-for file in files:
-    if 'ADE20K' not in file:
-        rivers.append(file)
-
-files = rivers
-
-f = open('river.txt', 'w')
-for file in files:
-    f.write(file)
-f.close()
-
-random.shuffle(files)
-train_files = files[:int(len(files) * (1 - rate))]
-val_files = files[int(len(files) * (1 - rate)):]
-
 f = open('river_train.txt', 'w')
-for file in train_files:
-    f.write(file)
+for file in files:
+    if 'ADE20K' not in file and 'lab' not in file:
+        f.write(file)
 f.close()
+
+# validation set
+f = open('water_val.txt', 'r')
+files = f.readlines()
+f.close()  
 
 f = open('river_val.txt', 'w')
-for file in val_files:
-    f.write(file)
+for file in files:
+    if 'ADE20K' not in file and 'lab' not in file:
+        f.write(file)
 f.close()
 
 f = open('river.yaml', 'w')
@@ -41,6 +32,3 @@ f.write('val: river_val.txt\n')
 f.write('names:\n')
 f.write('  0: water\n')
 f.close()
-
-print(f"Train files: {len(train_files)}")
-print(f"Validation files: {len(val_files)}")
