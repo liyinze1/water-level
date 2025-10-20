@@ -1,5 +1,5 @@
 import os
-# this two lines are here to hide some warnings from onnxruntime
+# these two lines are here to hide some warnings from onnxruntime
 # TODO: they are not working, I still can see the msgs.
 os.environ['OMP_NUM_THREADS'] = '1'
 os.environ['ONNX_DISABLE_THREAD_AFFINITY'] = '1'
@@ -42,6 +42,8 @@ int8 = False  # Activates INT8 quantization (does not work for ONNX exports)
 simplify = True  # Simplifies the model graph for ONNX exports with onnxslim
 dynamic = False  # Allows dynamic input sizes
 half = False  # Enables FP16 (half-precision) quantization, but only works if device is GPU
+
+# We export the PyTorch model to an ONNX model
 yolo_model.export(format="onnx", 
                   imgsz=imgsz, 
                   data=config_file,
@@ -67,6 +69,7 @@ input_name = model.graph.input[0].name
 
 datareader = get_datareader(config_file, imgsz=imgsz, limit=10, input_name=input_name)
 
+# An ONNX preprocessing step, advised before performing quantization
 # best.onnx --> best_pre.onnx
 onnx_model_pre_path = onnx_model_path.replace(".onnx", "_pre.onnx")
 quant_pre_process(
@@ -74,6 +77,7 @@ quant_pre_process(
     output_model_path=onnx_model_pre_path,
 )
 
+# Here we do the actual quantization
 # best_pre.onnx --> best_static.onnx
 onnx_model_quant_static = onnx_model_path.replace("best.onnx", "best_static.onnx")
 quantize_static(
@@ -85,5 +89,31 @@ quantize_static(
     activation_type=QuantType.QInt8,
 )
 print(f"Saved quantized model to {onnx_model_quant_static}")
+
+#-----------------------------------------------------
+#
+# convert quantized model to tflite
+#
+#-----------------------------------------------------
+# Load ONNX model
+onnx_model = onnx.load(onnx_model_quant_static)
+
+# Convert to TensorFlow representation
+tf_rep = prepare(onnx_model)
+
+# Export as SavedModel
+tf_saved_model_name = onnx_model_path.replace("best.onnx", "tf_saved_model")
+tf_rep.export_graph(tf_saved_model_name)
+print(f"Saved model: {tf_saved_model_name}")
+
+# use tensorflow to generate TFLite
+converter = tf.lite.TFLiteConverter.from_saved_model(tf_saved_model_name)
+tflite_model = converter.convert()
+
+# Save to file
+tf_lite_model_name = onnx_model_path.replace("best.onnx", "model.tflite")
+with open(tf_lite_model_name, "wb") as f:
+    f.write(tflite_model)
+print(f"Saved tflite model: {tf_lite_model_name}")
 
 print("Done")
