@@ -14,6 +14,44 @@ from ultralytics import YOLO
 import torch.nn.utils.prune as prune
 
 
+def count_trainable_parameters(model):
+    """
+    Count the number of trainable parameters in a model.
+
+    This function iterates over the model's parameters and sets them all to be trainable.
+    It then returns the total number of trainable parameters.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        The model for which to count the trainable parameters.
+
+    Returns
+    -------
+    int
+        The total number of trainable parameters in the model.
+    """
+    # make the model trainable so we can count the number of trainable parameters
+    for param in model.parameters():
+        param.requires_grad = True    
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
+def count_active_parameters(model):
+    remaining_params = 0
+    for name, module in model.named_modules():
+        if isinstance(module, torch.nn.Conv2d):
+            # Check if pruning was applied
+            if hasattr(module, 'weight_mask'):
+                # Count only unmasked (non-zero) weights
+                remaining_params += torch.count_nonzero(module.weight_mask)
+            else:
+                # If not pruned, count all weights
+                remaining_params += module.weight.numel()
+    return remaining_params
+
+
+
 if __name__ == "__main__": 
     #
     # definitions
@@ -33,12 +71,8 @@ if __name__ == "__main__":
 
     dummy_input = torch.rand(size=(1, 3, imgsz, imgsz))
     model = yolo_model.model
-    # make the model trainable so we can count the number of trainable parameters
-    for param in model.parameters():
-        param.requires_grad = True    
     
-    # model.train()
-    total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    total_params = count_trainable_parameters(model)
     print(f"Trainable parameters: {total_params}")
 
     model.eval()
@@ -55,16 +89,7 @@ if __name__ == "__main__":
             print("L1 Pruning", name)
             prune.l1_unstructured(module, name='weight', amount=0.4)
 
-    remaining_params = 0
-    for name, p in model.named_parameters():
-        if p.requires_grad:
-            if hasattr(module, 'weight_mask'):
-                # Count only unmasked (non-zero) weights
-                remaining_params += torch.count_nonzero(module.weight_mask)
-            else:
-                # If not pruned, count all weights
-                remaining_params += module.weight.numel()
+    remaining_params = count_active_parameters(model)
     print(f"Remaining trainable parameters after pruning: {remaining_params} ({remaining_params / total_params * 100:.2f}%)")
-
 
     print("Done")
