@@ -38,3 +38,7 @@ python train.py
 python split_river.py
 ```
 In the dataset, "ADE20K" folder contains any water related images. This script will create `river_train.txt`, `river_val.txt` and `river.yaml` by excluding "ADE20k"
+
+### 6. About manually labelled dataset
+
+After step3, run `python labelme_add.py` ONCE to append new images and labels into `data.txt`
