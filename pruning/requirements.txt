@@ -7,4 +7,5 @@ onnx-tf
 torch-pruning
 torchinfo
 grad-cam
-
+pycocotools
+torchmetrics
