@@ -1,10 +1,8 @@
+import argparse
 import os
 import sys
-# this two lines are here to hide some warnings from onnxruntime
-# TODO: they are not working, I still can see the msgs.
-os.environ['OMP_NUM_THREADS'] = '1'
-os.environ['ONNX_DISABLE_THREAD_AFFINITY'] = '1'
 
+# access scaling folder
 sys.path.append("../scaling")
 
 import yaml
@@ -21,18 +19,86 @@ from pruning_l1_unstructured import count_trainable_parameters, count_active_par
 import torch_pruning as tp
 
 
+def parse_opts():
+    parser = argparse.ArgumentParser(description="Script configuration")
 
+    parser.add_argument('--weights', type=str, default='../runs/segment/yolo11l-seg-300ep/weights/best.pt', help='relative path to weights file')
+    parser.add_argument('--data', type=str, default='../water.yaml', help='relateive path to data.yaml file')
+    parser.add_argument('--imgsz', type=int, default=640, help='inference size (pixels)')
+    
+    parser.add_argument('--global', dest="global_pruning", action='store_true', help="whether use global or staged (default) pruning")
+    # Parse arguments
+    args = parser.parse_args()
+
+    return args
+
+
+def prune_model_global(model, imp, ratio=0.5):
+    # I'm not using torch.randn(1, 3, imgsz, imgsz) because it consumes a lot of memory
+    example_inputs=torch.randn(1, 3, 128, 128)
+    
+    # Create pruner
+    print("Creating the MagnitudePruner")
+    # Make sure the model is in eval mode and gradients are off!
+    model.eval()
+    pruner = tp.pruner.MagnitudePruner(
+        model,
+        example_inputs=example_inputs,
+        importance=imp,
+        # ch_sparsity=0.5,  # 50% pruning --> This option is deprecated
+        pruning_ratio = ratio,  # channel/dim sparsity. you can define the ratio per module with `pruning_ratio_dict`
+        # global_pruning = True,  # default is False
+        ignored_layers = None,  # list with the nn.Module to ignore
+    )
+    
+    # Apply pruning
+    print("Apply the pruning method on the model")
+    pruner.step()
+
+
+def staged_pruning(model, imp):
+    example_inputs=torch.randn(1, 3, 128, 128)
+
+    prunable_types = (torch.nn.Conv2d, torch.nn.Linear)
+    prunable_layers = [m for m in model.modules() if isinstance(m, prunable_types)]
+    
+    #  prune each layer individually:
+    for layer in prunable_layers:
+        try:
+            # Create a new pruner for this layer only
+            pruner = tp.pruner.MagnitudePruner(
+                model,
+                example_inputs=example_inputs,
+                importance=imp,  # or your custom importance
+                pruning_ratio_dict={layer: 0.5},  # adjust ratio per layer
+                global_pruning=False,
+                ignored_layers=None,
+            )
+        
+            scores = pruner.importance_scores.get(layer)
+            if scores is not None:
+                print(f"Layer: {layer.__class__.__name__}, Shape: {scores.shape}")
+                print(f"Top 5 importance scores: {scores.topk(5).values.tolist()}")
+                print(f"Bottom 5 importance scores: {scores.topk(5, largest=False).values.tolist()}")
+
+            # Apply pruning
+            pruner.step()
+            print(f"Pruned layer: {layer}")
+    
+        except Exception as e:
+            print(f"Skipping layer due to error: {layer}\n{e}")
+
+    
 if __name__ == "__main__": 
-    #
-    # definitions
-    #
+    args = parse_opts()
+    print(args)
     base_folder = os.path.dirname(__file__)
-    imgsz = 640  # the default on train.py
-    best_model_path = os.path.join(base_folder, "../runs/segment/yolo11l-seg-300ep/weights/best.pt")
-    config_file = os.path.join(base_folder, "../water.yaml")
+
+    best_model_path = os.path.join(base_folder, args.weights)
+    config_file = os.path.join(base_folder, args.data)
 
     transform = v2.Compose([
-        v2.Resize([imgsz, imgsz]),  # we need to resize both h and w
+        v2.Resize([args.imgsz, args.imgsz]),  # we need to resize both h and w
         # v2.ToTensor()  # deprecated, use the line below
         v2.ToImage(), v2.ToDtype(torch.float32, scale=True)
     ])
@@ -60,23 +126,13 @@ if __name__ == "__main__":
     imp = tp.importance.MagnitudeImportance(p=2)
     # imp = tp.importance.ActivationImportance()
     # imp = tp.importance.GradientImportance()
-    
-    # Create pruner
-    print("Create the MagnitudePruner")
-    pruner = tp.pruner.MagnitudePruner(
-        model,
-        example_inputs=torch.randn(1, 3, imgsz, imgsz),
-        importance=imp,
-        ch_sparsity=0.5,  # 50% pruning --> This option is deprecated
-        # pruning_ratio = 0.5,  # channel/dim sparsity. you can define the ratio per module with `pruning_ratio_dict`
-        # global_pruning = True,  # default is False
-        # ignored_layers = None,  # list with the nn.Module to ignore
-    )
-    
-    # Apply pruning
-    print("Apply the pruning on the model")
-    pruner.step()
 
+    if args.global_pruning:
+        # the code below uses a lot of memory (I tested with 40GB and it is not enough)
+        prune_model_global(model, imp)
+    else:
+        staged_pruning(model, imp)
+    
     # We can retrain the pruned model
     # train(model, data_loader, epochs=5)  # TODO: training step
 
