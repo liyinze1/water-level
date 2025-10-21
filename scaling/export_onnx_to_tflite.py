@@ -17,8 +17,8 @@ def parse_args():
         argparse.Namespace: parsed arguments
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', type=str, default='weights/best.pt', help='relative path to weights file')
-    parser.add_argument('--data', type=str, default='data/water.yaml', help='relateive path to data.yaml file')
+    parser.add_argument('--weights', type=str, default='../runs/segment/yolo11l-seg-300ep/weights/best.pt', help='relative path to weights file')
+    parser.add_argument('--data', type=str, default='../water.yaml', help='relateive path to data.yaml file')
     parser.add_argument('--imgsz', type=int, default=640, help='inference size (pixels)')
 
     parser.add_argument('--int8', dest='int8', action='store_true', help='quantize to int8')
