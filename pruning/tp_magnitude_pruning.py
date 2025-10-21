@@ -35,7 +35,7 @@ def parse_opts():
 
 def prune_model_global(model, imp, ratio=0.5):
     # I'm not using torch.randn(1, 3, imgsz, imgsz) because it consumes a lot of memory
-    example_inputs=torch.randn(1, 3, 128, 128)
+    example_inputs=torch.randn(1, 3, 32, 32)
     
     # Create pruner
     print("Creating the MagnitudePruner")
@@ -56,23 +56,31 @@ def prune_model_global(model, imp, ratio=0.5):
     pruner.step()
 
 
-def staged_pruning(model, imp):
-    example_inputs=torch.randn(1, 3, 128, 128)
+def staged_pruning(model, imp, ratio=0.1):
+    example_inputs=torch.randn(1, 3, 32, 32)
+    print(f"Pruning ratio: {ratio * 100:.2f}%")
 
     prunable_types = (torch.nn.Conv2d, torch.nn.Linear)
-    prunable_layers = [m for m in model.modules() if isinstance(m, prunable_types)]
+    named_layers = dict(model.named_modules())
+
+    skip_prefixes = ["model.0", "model.1"]  # skip first few blocks
+
+    # Filter only prunable layers with names
+    prunable_layers = [(name, module) for name, module in named_layers.items() if isinstance(module, prunable_types) and not any(name.startswith(p) for p in skip_prefixes)]
     
     #  prune each layer individually:
-    for layer in prunable_layers:
+    for name, layer in reversed(prunable_layers):
+        print(f"Layer: {name}")
+        ignore_layers = [module for n, module in prunable_layers if n != name]
         try:
             # Create a new pruner for this layer only
             pruner = tp.pruner.MagnitudePruner(
                 model,
                 example_inputs=example_inputs,
                 importance=imp,  # or your custom importance
-                pruning_ratio_dict={layer: 0.5},  # adjust ratio per layer
+                pruning_ratio_dict={layer: ratio},  # adjust ratio per layer
                 global_pruning=False,
-                ignored_layers=None,
+                ignored_layers=ignore_layers,
             )
         
             scores = pruner.importance_scores.get(layer)
@@ -128,9 +136,11 @@ if __name__ == "__main__":
     # imp = tp.importance.GradientImportance()
 
     if args.global_pruning:
+        print("Using global pruning")
         # the code below uses a lot of memory (I tested with 40GB and it is not enough)
         prune_model_global(model, imp)
     else:
+        print("Using staged pruning")
         staged_pruning(model, imp)
     
     # We can retrain the pruned model
