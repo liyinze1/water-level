@@ -1,0 +1,8 @@
+ultralytics
+onnx
+onnxruntime
+onnxruntime-tools
+tensorflow
+onnx-tf
+torchmetrics
+torchinfo
