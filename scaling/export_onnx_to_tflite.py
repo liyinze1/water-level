@@ -21,7 +21,10 @@ def parse_args():
     parser.add_argument('--data', type=str, default='data/water.yaml', help='relateive path to data.yaml file')
     parser.add_argument('--imgsz', type=int, default=640, help='inference size (pixels)')
 
-    parser.add_argument('--int8', action='store_true', help='quantize to int8')
+    parser.add_argument('--int8', dest='int8', action='store_true', help='quantize to int8')
+    parser.add_argument('--no-int8', dest='int8', action='store_false', help='don\'t quantize to int8')
+    parser.set_defaults(int8=True)
+
     args = parser.parse_args()
     return args
 
