@@ -15,6 +15,7 @@ from onnxruntime.quantization import QuantFormat, QuantType
 
 from dataset import get_datareader
 
+
 if __name__ == "__main__":
     #
     # definitions
