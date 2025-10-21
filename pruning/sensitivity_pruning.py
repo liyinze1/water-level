@@ -89,7 +89,6 @@ def prune_least_sensitive_channels(sensitivity, prune_ratio=0.2):
         prune.ln_structured(module, name='weight', amount=len(prune_idxs), n=2, dim=0)
 
 
-
 def plot_sensitivity(sensitivity, fname="sentitivity.png"):
     for module, scores in sensitivity.items():
         plt.figure()
@@ -101,14 +100,36 @@ def plot_sensitivity(sensitivity, fname="sentitivity.png"):
         plt.close()
 
 
+def parse_args():
+    """
+    Parse command line arguments and returns an argparse.Namespace object.
+
+    The available arguments are:
+        --weights (str): relative path to weights file (default: 'weights/best.pt')
+        --data (str): relative path to data.yaml file (default: 'data/water.yaml')
+        --imgsz (int): inference size (pixels) (default: 640)
+        --ratio (float): how much to prune (between 0 and 1)
+
+    Returns:
+        argparse.Namespace: parsed arguments
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--weights', type=str, default='../runs/segment/yolo11l-seg-300ep/weights/best.pt', help='relative path to weights file')
+    parser.add_argument('--data', type=str, default='../water.yaml', help='relateive path to data.yaml file')
+    parser.add_argument('--imgsz', type=int, default=640, help='inference size (pixels)')
+
+    parser.add_argument('--ratio', type=float, default=0.1, help='pruning ratio')
+
+    args = parser.parse_args()
+    return args
+    
+
 if __name__ == "__main__": 
-    #
-    # definitions
-    #
+    args = parse_args()
     base_folder = os.path.dirname(__file__)
-    imgsz = 640  # the default on train.py
-    best_model_path = os.path.join(base_folder, "../runs/segment/yolo11l-seg-300ep/weights/best.pt")
-    config_file = os.path.join(base_folder, "../water.yaml")
+    imgsz = args.imgsz  # the default on train.py
+    best_model_path = os.path.join(base_folder, args.weights)
+    config_file = os.path.join(base_folder, args.data)
 
     transform = v2.Compose([
         v2.Resize([imgsz, imgsz]),  # we need to resize both h and w
@@ -121,6 +142,12 @@ if __name__ == "__main__":
     with open(config_file, 'r') as file:
         config = yaml.safe_load(file)
 
+    # ------------------------------------------------------------------------
+    #
+    # Model
+    #
+    # ------------------------------------------------------------------------
+    
     # load the best YOLO model
     yolo_model = YOLO(best_model_path)
     model = yolo_model.model  # pytorch model
@@ -128,16 +155,25 @@ if __name__ == "__main__":
     total_params = count_trainable_parameters(model)
     print(f"Trainable parameters: {total_params}")
 
+    # ------------------------------------------------------------------------
+    #
     # data
+    #
+    # ------------------------------------------------------------------------
     dataset = WaterLevelDataset(config_path=config_file, transform=transform)
     # print("Number of images", len(dataset))
-    data_loader = DataLoader(dataset, batch_size=1, shuffle=True, collate_fn=collate_fn)  # Note that batch size is 1, so we can control the number of images that are processed in collect_channel_sensitivity()
+    
+    # Note that batch size is 1, so we can control the number of images that are processed in collect_channel_sensitivity()
+    data_loader = DataLoader(dataset, batch_size=1, shuffle=True, collate_fn=collate_fn)  
+    
     sensitivity = collect_channel_sensitivity(model, data_loader, num_batches=5)
 
-    prune_least_sensitive_channels(sensitivity, prune_ratio=0.2)
+    prune_least_sensitive_channels(sensitivity, prune_ratio=args.ratio)
 
     remaining_params = count_active_parameters(model)
     print(f"Remaining trainable parameters after pruning: {remaining_params} ({remaining_params / total_params * 100:.2f}%)")
 
+    # TODO: check performance metrics before and after pruning
+    
     print("Done")
     
