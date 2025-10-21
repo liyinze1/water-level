@@ -5,3 +5,4 @@
 - [ ] finish QAT implementation `quantize-qat-onnx.py`
 - [ ] compare results (accuracy, mAP, etc.) from original model and QAT
 - [ ] pruning techniques
+- [ ] validation (val.py) that computes mAP and mAR on validation set using models

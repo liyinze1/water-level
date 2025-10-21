@@ -8,10 +8,12 @@ This folder performs quantization of the YOLO model used for water detection.
 - quantize-qat-onnx.py: QAT (quantization-aware training)
 
 
-## TODO:
+TODO: read [TODO.md](TODO.md)
 
-- QAT
-- validation (val.py) that computes mAP and mAR on validation set using models
+
+## Important remarks:
+
+Converting ONNX model to TFLite model is not feasible (so far) using Python 3.13 because several dependency libraries were not migrated to this version, such as onnx-tf, onnx2tf, ai_edge_litert, etc.
 
 ## Refs
 
