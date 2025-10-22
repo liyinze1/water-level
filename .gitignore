@@ -8,10 +8,16 @@
 runs/
 wandb/
 *.cache
+*.pickle
 
 __pycache__/
 .ipynb_checkpoints/
 
+runs/
+external_models/
+
 # models
 *.pt
 *.onnx
+*.tflite
+*.pb
