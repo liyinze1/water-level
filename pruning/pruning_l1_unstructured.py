@@ -37,7 +37,7 @@ def count_trainable_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
-def count_active_parameters(model):
+def count_active_parameters(model, check_non_zero=True):
     remaining_params = 0
     for name, module in model.named_modules():
         if isinstance(module, torch.nn.Conv2d):
@@ -46,8 +46,12 @@ def count_active_parameters(model):
                 # Count only unmasked (non-zero) weights
                 remaining_params += torch.count_nonzero(module.weight_mask)
             else:
-                # If not pruned, count all weights
-                remaining_params += module.weight.numel()
+                if check_non_zero:
+                    # Count only non-zero weights
+                    remaining_params += torch.count_nonzero(module.weight)
+                else:
+                    # Count all weights
+                    remaining_params += module.weight.numel()
     return remaining_params
 
 
