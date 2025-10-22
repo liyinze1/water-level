@@ -3,6 +3,13 @@
 - [sensitivity pruning](sensitivity_pruning.py) collects the sensitivity (absolute mean) of each channel in each Conv2d layer in a model and prune the least sensitive channels.
 
 
+- [gradcam_pruning](gradcam_pruning.py): error processing GradCAM
+
+- [he_channel_pruning](he_channel_pruning.py): running but it seems like it is not pruning any layer
+
+- [taylor_pruning](taylor_pruning.py): model is not returning the gradients. thus, the method cannot be executed. returns same results as he_channel_pruning.
+
+- [fpgm_pruner](fpgm_pruner.py): 
 
 # torch_pruning
 
