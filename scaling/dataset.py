@@ -87,6 +87,7 @@ class WaterLevelDataset(Dataset):
         # RGB image
         img_path = os.path.join(self.data_path, sample_path)
         image = Image.open(img_path)
+        # print("Reading", img_path)
         image = np.array(image)
 
         label_path = img_path.replace("data/images", "data/labels")[:-4] + ".txt"
@@ -106,14 +107,16 @@ class WaterLevelDataset(Dataset):
             sample = {
                 "image": image,
                 "annotations": {
-                    "polygons": polygons,  # BUG: transform is not altering polygons
+                    "polygons": polygons,  # remember to convert to KeyPoints
                     "labels": torch.tensor(class_ids, dtype=torch.int64)
                 }
             }
             sample = self.transform(sample)
 
             # return the transformed values
-            image = torch.as_tensor(sample["image"]).float() / 255.0  # normalize to [0, 1]
+            # notice the commented line below, we dont need to normalize because transform has v2.ToImage() which normalizes the input
+            # image = torch.as_tensor(sample["image"]).float() / 255.0  # normalize to [0, 1]
+            image = torch.as_tensor(sample["image"]).float()
             labels = [[label, polygon] for label, polygon in zip(sample["annotations"]["labels"], sample["annotations"]["polygons"])]
 
         else:
