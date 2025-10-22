@@ -18,7 +18,8 @@ Code: https://github.com/he-y/filter-pruning-geometric-median
 import os
 import yaml
 import sys
-sys.path.append("../scaling")
+base_folder = os.path.dirname(__file__)
+sys.path.append(os.path.join(base_folder, "../scaling"))
 
 import torch
 import torch.nn as nn
@@ -62,7 +63,6 @@ def geometric_median_pruning(conv_layer, prune_ratio=0.2, eps=1e-5, max_iter=100
 
 if __name__ == "__main__": 
     args = parse_args()
-    base_folder = os.path.dirname(__file__)
     best_model_path = os.path.join(base_folder, args.weights)
     config_file = os.path.join(base_folder, args.data)
 
@@ -92,7 +92,9 @@ if __name__ == "__main__":
             print(f"Pruning layer: {name}")
             geometric_median_pruning(layer, prune_ratio=args.ratio)
 
-    remaining_params = count_active_parameters(model)
+    # Count remaining non-zero trainable parameters
+    # remember that this pruning is applied over the weights
+    remaining_params = count_active_parameters(model, check_non_zero=True)
     print(f"Remaining trainable parameters after pruning: {remaining_params} ({remaining_params / total_params * 100:.2f}%)")
 
     print("Done")
