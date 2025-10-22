@@ -3,12 +3,10 @@ import sys
 sys.path.append("../scaling")
 import argparse
 import yaml
-import matplotlib.pyplot as plt
 
 import torch
 from ultralytics import YOLO
 import torch.nn as nn
-import torch.nn.utils.prune as prune
 from torch.utils.data import DataLoader
 from torchvision.transforms import v2
 
