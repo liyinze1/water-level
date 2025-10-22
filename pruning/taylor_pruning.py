@@ -31,7 +31,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../scaling"))
 import yaml
 
 import torch
-import torch.nn as nn
+from torch import nn
 # import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torchvision.transforms import v2
@@ -106,15 +106,14 @@ if __name__ == '__main__':
         print("No masks found")
         exit(0)
     
-    pred_mask = combine_masks(masks)
-    pred_mask = torch.tensor(pred_mask.astype(float))  # needs to be float tensor
     # decode input into a mask
+    pred_mask = combine_masks(masks)
     target_mask = create_binary_mask(targets[0], img_shape)
     target_mask = torch.tensor(target_mask.astype(float), requires_grad=True)  # needs to be float tensor with gradient enabled
 
+    print("Getting gradients")
     loss = criterion(pred_mask, target_mask)
     print(f"Loss value: {loss.item()}")
-    print("Getting gradients")
     model.zero_grad()
     loss.backward()
     # for name, param in model.named_parameters():

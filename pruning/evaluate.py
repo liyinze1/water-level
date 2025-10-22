@@ -154,23 +154,24 @@ def decode_yolov11_segmentation2(
     masks = torch.sigmoid(pred_mask)  # (N, H, W)
 
     # Resize masks to image size
+    # NOTE: masks_resized must be a tensor, and keep its gradient
     masks_resized = TF.resize(masks.unsqueeze(1), image_size, interpolation=TF.InterpolationMode.BILINEAR).squeeze(1)
 
     # masks as binary
     masks_resized[masks_resized > .5] = 1
     masks_resized[masks_resized <= .5] = 0
 
-    return boxes_pixel, masks_resized.detach().cpu()
+    return boxes_pixel, masks_resized
 
 
-def combine_masks(masks):
-    mask = np.zeros_like(masks[0]).astype(bool)
-    for i in range(masks.shape[0]):
-        block_mask = masks[0].numpy()
-        block_mask = block_mask.astype(bool)
-        # Create a color layer
-        mask = np.logical_or.reduce([mask, block_mask])
-    return mask
+def combine_masks(masks: torch.Tensor) -> torch.Tensor:
+    combined_mask = masks[0].float()
+    for i in range(1, masks.shape[0]):
+        combined_mask = combined_mask + masks[i].float()
+    
+    # need to clamp it to keep it binary
+    combined_mask = combined_mask.clamp(0, 1)
+    return combined_mask
 
 
 def decode_raw_labels(lines):
