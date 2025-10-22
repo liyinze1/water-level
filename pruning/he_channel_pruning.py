@@ -97,5 +97,7 @@ if __name__ == "__main__":
     remaining_params = count_active_parameters(model, check_non_zero=True)
     print(f"Remaining trainable parameters after pruning: {remaining_params} ({remaining_params / total_params * 100:.2f}%)")
 
+    # TODO: check metrics before and after pruning
+
     print("Done")
 
