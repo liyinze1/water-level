@@ -51,8 +51,8 @@ def labelme_to_yolo(json_file, output_dir):
 
 
 def main():
-    source_folder = "roadrunner_photos/json"
-    output_folder = "roadrunner_photos/labels"
+    source_folder = "photos-1024/json"
+    output_folder = "photos-1024/labels"
     
     for filename in os.listdir(source_folder):
         if filename.endswith('.json'):
