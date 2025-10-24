@@ -12,4 +12,4 @@ model = YOLO("yolo11n-seg.pt")
 
 # Train the model with 2 GPUs, if available
 devices = [0, 1] if torch.cuda.device_count() > 1 else [0]
-results = model.train(data="river.yaml", epochs=500, imgsz=640, device=devices, name="river-yolo11n-seg-500ep-bs128", batch=128)
+results = model.train(data="river.yaml", epochs=1000, imgsz=640, device=devices, name="waterv2_roadrunner", batch=64)
