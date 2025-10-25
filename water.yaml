@@ -1,0 +1,6 @@
+path: /Users/yinze/Documents/GitHub/water-level
+train: water_train.txt
+val: water_val.txt
+test: water_test.txt
+names:
+  0: water
