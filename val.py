@@ -1,10 +1,10 @@
 from ultralytics import YOLO
 
 # Load a model
-model = YOLO("runs/segment/river-yolo11n-seg-1kep-bs64/weights/best.pt")
+model = YOLO("runs/segment/waterv2_roadrunner/weights/best.pt")
 
 # Validate the model
-metrics = model.val(data='water_test.txt', plots=True, name='river-model-val-new-photo')
+metrics = model.val(data='water.yaml', plots=True, name='waterv2_roadrunner-test', split='test')
 metrics.box.map  # map50-95(B)
 metrics.box.map50  # map50(B)
 metrics.box.map75  # map75(B)
