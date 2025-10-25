@@ -98,6 +98,7 @@ if __name__ == "__main__":
     print(f"Remaining trainable parameters after pruning: {remaining_params} ({remaining_params / total_params * 100:.2f}%)")
 
     # TODO: check metrics before and after pruning
+    # TODO: fine-tunning: retrain for a few epochs to recover accuracy.
 
     print("Done")
 
