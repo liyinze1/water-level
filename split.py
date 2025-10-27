@@ -41,7 +41,6 @@ f.close()
 
 f = open('water.yaml', 'w')
 abs_path = os.path.abspath('.')
-f.write(f'path: {abs_path}\n')
 f.write('train: water_train.txt\n')
 f.write('val: water_val.txt\n')
 f.write('test: water_test.txt\n')
