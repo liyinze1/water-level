@@ -23,22 +23,9 @@ python dataset_prepare.py
 ```
 This script will read all the image files (png and jpg), pairing the image with its label, convert the label to YOLO format, store the images with labels under `./data` and put the pathes of all images into `./data.txt`
 
-```bash
-python split.py
-```
-This script will split the dataset by 8:2, and output `water_train.txt`, `water_val.txt` and `water.yaml`
+And unzip the customised dataset `roadrunner_photos`
 
 ### 4. Train
 ```bash
 python train.py
 ```
-
-### 5. About river only images
-```bash
-python split_river.py
-```
-In the dataset, "ADE20K" folder contains any water related images. This script will create `river_train.txt`, `river_val.txt` and `river.yaml` by excluding "ADE20k"
-
-### 6. About manually labelled dataset
-
-After step3, run `python labelme_add.py` ONCE to append new images and labels into `data.txt`
