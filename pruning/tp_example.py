@@ -1,3 +1,8 @@
+"""
+    Example of MagnitudePruner on a resnet18 model
+
+""" 
+
 import torch
 from torchvision.models import resnet18
 import torch_pruning as tp
