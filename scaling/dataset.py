@@ -16,7 +16,7 @@ class WaterLevelDataset(Dataset):
     """ This class definition is for a Dataset class to provide a dataset for water level segmentation tasks and to train the quantization process.
     """
 
-    def __init__(self, config_path, transform=None):
+    def __init__(self, config_path, transform=None, train=True):
         """
         Initialize a WaterLevelDataset object.
 
@@ -30,9 +30,9 @@ class WaterLevelDataset(Dataset):
         with open(config_path, 'r') as f:
             config = yaml.safe_load(f)
             
-        train_fname = os.path.join(os.path.dirname(config_path), config["train"])
+        dataset_config_fname = os.path.join(os.path.dirname(config_path), config["train"] if train else config["val"])
         self.data_path = config["path"]
-        with open(train_fname, 'r') as f:
+        with open(dataset_config_fname, 'r') as f:
             # Read relative paths from train file
             self.samples = [line.strip() for line in f if line.strip()]
 
@@ -121,6 +121,8 @@ class WaterLevelDataset(Dataset):
 
         else:
             image = torch.as_tensor(image).float() / 255.0
+
+        image = image[:3, :, :]  # Keep only R, G, B channels
 
         return image, labels
 
