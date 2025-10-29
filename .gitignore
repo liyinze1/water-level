@@ -8,10 +8,13 @@
 runs/
 wandb/
 *.cache
+
 *.pickle
+*.npy
 
 __pycache__/
 .ipynb_checkpoints/
+MNIST/
 
 runs/
 external_models/
@@ -21,3 +24,9 @@ external_models/
 *.onnx
 *.tflite
 *.pb
+
+# compressed files
+*.zip
+*.tar
+*.gz
+
