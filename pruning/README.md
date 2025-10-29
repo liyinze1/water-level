@@ -6,19 +6,19 @@
 
 - [pruning_l1_unstructured](pruning_l1_unstructured.py): Use L1 norm to prune network weights
 
+- [lottery_pruning.py](lottery_pruning.py): simplified version of Lottery Ticket Hypothesis pruning proposed by Frankle and Carbin, 2019.
+
+- [taylor_pruning](taylor_pruning.py): Uses simplified version of taylor pruning from Molchanov et al., 2019.
+
 ## Not working yet
 
 - [importance_pruning.py](importance_pruning.py): select among several importance metrics to prune the filters
 
 - [l12_pruning.py](l12_pruning.py): simple L1/L2 norm-based filter pruning
 
-- [lottery_pruning.py](lottery_pruning.py): simplified version of Lottery Ticket Hypothesis pruning
-
 - [lth_pruning.py](lth_pruning.py): more complete version of Lottery Ticket Hypothesis pruning
 
 - [gradcam_pruning](gradcam_pruning.py): error processing GradCAM
-
-- [taylor_pruning](taylor_pruning.py): model is not returning the gradients. thus, the method cannot be executed. returns same results as he_channel_pruning.
 
 - [fpgm_pruner](fpgm_pruner.py): raises error while .prune() execution
 
