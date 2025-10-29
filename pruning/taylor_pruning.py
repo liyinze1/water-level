@@ -55,6 +55,8 @@ def taylor_importance(conv_layer):
 
 
 if __name__ == '__main__':
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     args = parse_args()
     base_folder = os.path.dirname(__file__)
     best_model_path = os.path.join(base_folder, args.weights)
@@ -92,15 +94,15 @@ if __name__ == '__main__':
     inputs, targets = next(iter(data_loader))
 
     model.train()
+    model.to(device)
     for param in model.parameters():
         param.requires_grad = True    
-    outputs = model(inputs)
+    outputs = model(inputs.to(device))
 
     # need to reshape outputs, because with model.train() the output is different from model.eval()
-
     img_shape = targets[0][0][1].canvas_size  # (h, w), all images have the same shape
     # decode output into a mask
-    boxes, masks = decode_yolov11_segmentation2(outputs)
+    boxes, masks = decode_yolov11_segmentation2(outputs, device=device)
     if len(masks) == 0:
         # TODO: raise error
         print("No masks found")
@@ -108,11 +110,11 @@ if __name__ == '__main__':
     
     # decode input into a mask
     pred_mask = combine_masks(masks)
-    target_mask = create_binary_mask(targets[0], img_shape)
-    target_mask = torch.tensor(target_mask.astype(float), requires_grad=True)  # needs to be float tensor with gradient enabled
+    target_mask = create_binary_mask(targets, img_shape)
 
     print("Getting gradients")
-    loss = criterion(pred_mask, target_mask)
+    print("pred_mask shape:", pred_mask.shape, pred_mask.requires_grad)
+    loss = criterion(pred_mask, target_mask.to(device))
     print(f"Loss value: {loss.item()}")
     model.zero_grad()
     loss.backward()
@@ -125,12 +127,13 @@ if __name__ == '__main__':
     # Traverse in reverse order
     for name, layer in reversed(layers):
         if isinstance(layer, nn.Conv2d) or isinstance(layer, nn.Linear):
-            print(f"Pruning layer: {name}")
 
             importance = taylor_importance(layer)
             if importance is None:
-                print("\tNo gradients for this layer")
+                # print(f"⚠ Pruning layer: {name} --> No gradients for this layer")
                 continue
+            else:
+                print(f"Pruning layer: {name}")
             threshold = torch.quantile(importance, args.ratio)  # prune ratio% least important
             mask = (importance > threshold).float().view(-1,1,1,1)
             layer.weight.data *= mask  # prune weights
