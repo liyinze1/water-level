@@ -10,6 +10,7 @@ wandb/
 __pycache__/
 *.cache
 *.ipynb
+*.npy
 !roadrunner_train.txt
 !roadrunner_val.txt
 !roadrunner.yaml
