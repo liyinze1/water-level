@@ -1,3 +1,5 @@
+#### This branch is for training Yolov11 on the public dataset, for training Yolov11 on customized water monitoring dataset, please check branch: https://github.com/liyinze1/water-level/tree/train-new-photos
+
 ### 1. Download the dataset
 
 ```bash
