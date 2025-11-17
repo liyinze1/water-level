@@ -10,7 +10,6 @@ wandb/
 __pycache__/
 *.cache
 *.ipynb
-!water_test.txt
-!water_train.txt
-!water_val.txt
-!water.yaml
+!roadrunner_train.txt
+!roadrunner_val.txt
+!roadrunner.yaml

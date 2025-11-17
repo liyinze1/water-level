@@ -1,0 +1,4 @@
+train: roadrunner_train.txt
+val: roadrunner_val.txt
+names:
+  0: water
