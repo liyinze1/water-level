@@ -1,11 +1,6 @@
 import random
 import os
 
-f = open('data.txt', 'r')
-all_files = f.readlines()
-f.close()
-rate = 0.2
-
 dataset = ['roadrunner_photos/images/' + file + '\n' for file in os.listdir('roadrunner_photos/images') if file.endswith('.png')]
 
 random.shuffle(dataset)
